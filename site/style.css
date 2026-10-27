@@ -208,3 +208,5 @@ body {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+.nickname { margin-left: 4px; color: var(--muted); font-size: 0.95rem; font-weight: 500; }
