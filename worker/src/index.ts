@@ -1,7 +1,11 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { askClaude } from "./claude";
 import { validateChatRequest } from "./validate";
 
 export interface Env {
   ALLOWED_ORIGINS: string;
+  // ローカルは .dev.vars、本番は `wrangler secret put` で設定する
+  ANTHROPIC_API_KEY: string;
 }
 
 function corsHeaders(origin: string): Record<string, string> {
@@ -52,8 +56,13 @@ export default {
       return json({ error: "invalid_request", reason: result.reason }, 400, cors);
     }
 
-    // TODO(S1): ここで Claude API を呼ぶ。S0 では受け取った文をそのまま返す
-    const last = result.messages[result.messages.length - 1];
-    return json({ text: `受け取りました: ${last.content}` }, 200, cors);
+    try {
+      const text = await askClaude(env.ANTHROPIC_API_KEY, result.messages);
+      return json({ text }, 200, cors);
+    } catch (err) {
+      // 詳細は Worker のログにだけ残し、ブラウザには種類だけ返す
+      console.error(err instanceof Anthropic.APIError ? `Claude API ${err.status}: ${err.message}` : err);
+      return json({ error: "upstream_error" }, 502, cors);
+    }
   },
 };

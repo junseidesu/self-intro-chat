@@ -17,7 +17,7 @@
 - AIの回答の根拠は profile.md だけ。書いていないことは作らない
 - 会話は `user` と `assistant` が交互に並び、先頭と末尾は `user`（Claude APIの要件）
 - 訪問者の1メッセージは500文字まで、AIの回答（送り返されてくる分）は3000文字まで。Workerに送る会話は直近10メッセージまで
-- 回答の長さは最大800トークン
+- 回答の長さは最大1024トークン（`max_tokens`。考える量は effort `low` で抑える）
 - 制限（回数・1日上限・文字数）に引っかかったリクエストはClaude APIを呼ばない
 
 ## 3. 状態遷移（チャット画面）
@@ -93,7 +93,7 @@ docs/
 ## 8. 技術構成
 - サイト: 素の HTML / CSS / JavaScript（ビルドなし）
 - 中継: Cloudflare Workers + TypeScript（strict）、Wrangler でデプロイ
-- AI: Claude API、`@anthropic-ai/sdk`、モデルは Haiku（実装時に最新のモデルIDを確認）
+- AI: Claude API、`@anthropic-ai/sdk`、モデルは `claude-haiku-5-5`、effort `low`
 - 制限: Workers Rate Limiting（IPごと 10回/分）、KV（全体 1日200回）
 - テスト: Vitest（Worker の検証・制限・指示文の組み立て）
 - 公開先: サイト → GitHub Pages（Actions で `site/` を公開）、中継 → Cloudflare Workers（`*.workers.dev`）

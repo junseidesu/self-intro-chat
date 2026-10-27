@@ -1,7 +1,7 @@
 # PLAN: 自己紹介AIチャット
 
 最終更新: 2026-10-27
-**現在地:** S0 完了。次は S1（Claude API を呼ぶ。APIキーが必要）。
+**現在地:** S1 完了。次は S2（profile.md と指示文）。
 
 ## 事前準備（ユーザー側の作業）
 - [ ] GitHub アカウント（公開リポジトリを作る）
@@ -16,7 +16,7 @@
 - 受け入れ基準: `npm test` と型チェックが通る／ローカルで画面から送信すると、Worker からの返事が表示される
 - 確認方法: `wrangler dev` と静的サーバーを起動し、ブラウザで送信
 
-### [ ] S1 Claude が答える（US-1）
+### [x] S1 Claude が答える（US-1）
 - 内容: Worker から Claude API を呼ぶ。キーは `.dev.vars`（Git除外）。まだストリーミングなし
 - 受け入れ基準: 「こんにちは」と送ると Claude の回答が表示される／キーがサイト側のどこにもない
 - 確認方法: ローカルで送信／`site/` をキーの文字列で検索して0件
@@ -54,11 +54,16 @@
 ## 完了ログ
 - 2026-10-27 S0 完了。検証の単体テスト14件が通過。ブラウザで送信→Workerから返事が表示されることを確認。許可していないOriginは403、不正な要求は400になることを curl で確認
 
+- 2026-10-27 S1 完了。ブラウザで「こんにちは」→ Claude（claude-haiku-5-5）の回答が表示されることを確認。site/・docs/・worker/src にキーの文字列が0件、`.dev.vars` は Git 除外を確認
+
 ## 技術的負債・TODO
-- `index.ts` の `TODO(S1)`：受け取った文をそのまま返している（S1 で Claude 呼び出しに置き換える）
+- `claude.ts` の `TODO(S2)`：指示文が仮の1行
+- `index.html` の `TODO(S6)`：favicon が空指定
 
 ## 分かったこと（次のセッションの自分へ）
 - ローカル起動: `npm --prefix worker run dev`（:8787）と `python -m http.server 5500 --directory site`（:5500）。`.claude/launch.json` に両方登録済み
 - 確認: `npm --prefix worker run check`（型チェック＋テスト）
 - npm 11 が esbuild / workerd の install script を保留にするが、wrangler dev はそのまま動いた
 - TypeScript は 5.9 系に固定（7.0 は出たばかりなので避けた）
+- Workers では `process.env` が使えないので、SDK には `new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })` で渡す
+- Haiku 5.5 は `temperature` 等を送ると400。effort の既定は `medium` なので `low` を明示している

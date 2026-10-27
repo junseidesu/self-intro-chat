@@ -8,7 +8,7 @@ export interface Message {
 export const LIMITS = {
   maxMessages: 10,
   maxUserChars: 500,
-  // AI の回答も送り返されてくるので上限を設ける（回答は最大800トークン程度）
+  // AI の回答も送り返されてくるので上限を設ける（回答は最大1024トークン）
   maxAssistantChars: 3000,
 } as const;
 
