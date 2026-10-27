@@ -1,5 +1,7 @@
 # 自己紹介AIチャット
 
+公開URL: https://junseidesu.github.io/self-intro-chat/
+
 訪問者が「僕」について質問すると、AI（Claude）が `worker/profile.md` の内容だけをもとに答える自己紹介サイト。
 
 ```

@@ -1,13 +1,13 @@
 # PLAN: 自己紹介AIチャット
 
 最終更新: 2026-10-27
-**現在地:** S6 完了。次は S7（公開）。profile.md はサンプルのままなので、本人の情報に書き換えが必要。
+**現在地:** MVP 完成・公開済み（https://junseidesu.github.io/self-intro-chat/）。profile.md はサンプルのままなので、本人の情報に書き換えが必要。
 
 ## 事前準備（ユーザー側の作業）
-- [ ] GitHub アカウント（公開リポジトリを作る）
-- [ ] Cloudflare アカウント（無料）
+- [x] GitHub アカウント（公開リポジトリを作る）
+- [x] Cloudflare アカウント（無料）
 - [ ] Anthropic Console でAPIキーを作成し、クレジットを購入、**月の利用額の上限を設定**
-- [ ] Node.js が入っていること（`node -v`）
+- [x] Node.js が入っていること（`node -v`）
 
 ## スライス一覧
 
@@ -46,7 +46,7 @@
 - 受け入れ基準: 幅360pxで崩れない／質問例を押すと送信される／Enter送信・Shift+Enter改行
 - 確認方法: ブラウザのスマホ表示で確認
 
-### [ ] S7 公開
+### [x] S7 公開
 - 内容: Worker を Cloudflare にデプロイ（Secret設定）、GitHub Actions で `site/` を Pages に公開、README に更新手順（profile.md を直して再デプロイ）
 - 受け入れ基準: PRD の成功基準をすべて満たす
 - 確認方法: 公開URLをスマホで開いて確認
@@ -60,6 +60,7 @@
 - 2026-10-27 S4 完了。長めの回答で、1.8秒で表示開始→約3秒で完了、文字数が段階的に増えることを確認。送信中はボタン無効。Worker を止めて送るとエラー表示になり、途中の吹き出しと質問は履歴から消える。Worker 再起動後は正常に回答。Claude 呼び出し中のエラー（upstream_error / refusal）の表示は未確認（意図的に起こす手段がないため）
 - 2026-10-27 S5 完了。不正な要求を12回連打 → 11回目から429。許可外 Origin と Origin なしは403。1日上限を2にした Worker で3回目が 429 daily_limit。画面で「続けて送りすぎです」の表示を確認。単体テスト19件通過
 - 2026-10-27 S6 完了。見出し（アイコン・名前・ひとこと・リンク）、あいさつの吹き出し、質問例4つ、画面下の入力欄、ダークモードを実装。質問例のクリックで送信され質問例が消えること、Shift+Enter で改行・Enter で送信を確認。幅360pxで横スクロールなし（scrollWidth=360）、明るい・暗いテーマ両方で表示を確認。コンソールエラーなし
+- 2026-10-27 S7 完了。Worker: https://self-intro-chat.selfchat.workers.dev（KV は初回 deploy で自動作成）。サイト: https://junseidesu.github.io/self-intro-chat/（Actions で公開）。公開URLで、趣味の質問に正しく回答・好きな食べ物は「分かりません」、ページの全ファイルにキーの文字列なし、連続送信で429、幅375pxで横スクロールなし・コンソールエラーなしを確認
 
 ## 技術的負債・TODO
 - `worker/profile.md` が【サンプル】のダミー。本人が書き換える
@@ -67,6 +68,9 @@
 - スマホのキーボードでは Shift+Enter が使えないので改行できない（質問は短い想定なので許容）
 
 ## 分かったこと（次のセッションの自分へ）
+- 本番ログは `npx --prefix worker wrangler tail`。初回 `secret put` で貼り付けたキーが不正（401）だったので、`.dev.vars` からパイプで登録し直した
+- Windows の curl で日本語を送ると文字化けして噛み合わない回答になる。日本語の確認はブラウザで行う
+- コミットの作者メール（git config の user.email）は公開リポジトリで見える
 - ローカル起動: `npm --prefix worker run dev`（:8787）と `python -m http.server 5500 --directory site`（:5500）。`.claude/launch.json` に両方登録済み
 - 確認: `npm --prefix worker run check`（型チェック＋テスト）
 - npm 11 が esbuild / workerd の install script を保留にするが、wrangler dev はそのまま動いた
