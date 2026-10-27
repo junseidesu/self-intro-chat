@@ -1,11 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import profile from "../profile.md";
+import instructions from "../prompt.md";
+import { buildSystemPrompt } from "./prompt";
 import type { Message } from "./validate";
 
 export const MODEL = "claude-haiku-5-5";
 export const MAX_TOKENS = 1024;
 
-// TODO(S2): profile.md と prompt.md から組み立てる
-const SYSTEM_PROMPT = "あなたは自己紹介サイトのアシスタントです。日本語で簡潔に答えてください。";
+const SYSTEM_PROMPT = buildSystemPrompt(instructions, profile);
 
 export async function askClaude(apiKey: string, messages: Message[]): Promise<string> {
   const client = new Anthropic({ apiKey });
