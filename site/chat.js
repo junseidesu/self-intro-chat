@@ -6,6 +6,13 @@ const sendButton = document.getElementById("send");
 // 会話はこの配列だけで持つ（リロードで消える）
 const history = [];
 
+// Worker は10件まで受け付ける。先頭を user にするため奇数の9件に切り詰める
+const MAX_SENT_MESSAGES = 9;
+
+function recentHistory() {
+  return history.slice(-MAX_SENT_MESSAGES);
+}
+
 function addBubble(role, text) {
   const div = document.createElement("div");
   div.className = `bubble ${role}`;
@@ -25,7 +32,7 @@ async function send(text) {
     const res = await fetch(window.CHAT_CONFIG.workerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: history }),
+      body: JSON.stringify({ messages: recentHistory() }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
