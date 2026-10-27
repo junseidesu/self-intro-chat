@@ -74,6 +74,7 @@
 - Workers では `process.env` が使えないので、SDK には `new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })` で渡す
 - 1日上限の確認は `npx wrangler dev --port 8788 --var DAILY_LIMIT:2 --persist-to <一時フォルダ>` で別の Worker を立てると、本来の数字や記録を汚さずに試せる
 - KV の `id` は書いていない。初回 `wrangler deploy` で自動作成される（S7 で確認）
+- `site/index.html` の CSS/JS は `?v=数字` 付きで読み込む。CSS/JS を変えたら数字を上げる（キャッシュで古い HTML と新しい JS が混ざると、質問例の要素がなくて chat.js が止まるのを実際に見た）
 - `ctx.waitUntil` で SSE を書き込みながら、Response は先に返している
 - 画面は会話を全部持つが、Worker に送るのは直近9件だけ（先頭を user にするため奇数）
 - profile.md の `<!-- -->` は AI に渡す前に取り除いている（書く人向けメモ用）
