@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { askClaude } from "./claude";
+import { RefusalError, streamClaude } from "./claude";
 import { validateChatRequest } from "./validate";
 
 export interface Env {
@@ -25,7 +25,7 @@ function json(data: unknown, status: number, headers: Record<string, string>): R
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname !== "/chat") {
       return json({ error: "not_found" }, 404, {});
@@ -56,13 +56,35 @@ export default {
       return json({ error: "invalid_request", reason: result.reason }, 400, cors);
     }
 
-    try {
-      const text = await askClaude(env.ANTHROPIC_API_KEY, result.messages);
-      return json({ text }, 200, cors);
-    } catch (err) {
-      // 詳細は Worker のログにだけ残し、ブラウザには種類だけ返す
-      console.error(err instanceof Anthropic.APIError ? `Claude API ${err.status}: ${err.message}` : err);
-      return json({ error: "upstream_error" }, 502, cors);
-    }
+    // 回答は SSE で少しずつ返す。途中で失敗したら error イベントを送って閉じる
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+    const send = (data: unknown) => writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+
+    ctx.waitUntil(
+      (async () => {
+        try {
+          for await (const text of streamClaude(env.ANTHROPIC_API_KEY, result.messages)) {
+            await send({ text });
+          }
+          await send({ done: true });
+        } catch (err) {
+          if (err instanceof RefusalError) {
+            await send({ error: "refusal" });
+          } else {
+            // 詳細は Worker のログにだけ残し、ブラウザには種類だけ返す
+            console.error(err instanceof Anthropic.APIError ? `Claude API ${err.status}: ${err.message}` : err);
+            await send({ error: "upstream_error" });
+          }
+        } finally {
+          await writer.close();
+        }
+      })(),
+    );
+
+    return new Response(readable, {
+      headers: { ...cors, "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache" },
+    });
   },
 };

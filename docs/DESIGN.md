@@ -46,7 +46,9 @@ Worker は受け取ったデータを必ず検証する（形・役割の並び�
 
 ### Worker からの応答
 - 成功: `text/event-stream`（SSE）で本文の断片を順に送る。`data: {"text":"..."}` を繰り返し、最後に `data: {"done":true}`
-- 失敗: JSON `{ "error": "rate_limited" | "daily_limit" | "invalid_request" | "upstream_error" }` と適切なHTTPステータス（429 / 400 / 502）
+- Claude 呼び出し前の失敗: JSON `{ "error": "rate_limited" | "daily_limit" | "invalid_request" | "forbidden_origin" }` と HTTP ステータス（429 / 400 / 403）
+- Claude 呼び出し中の失敗: SSE は始まっているので、`data: {"error":"upstream_error" | "refusal"}` を送って閉じる。画面は途中までの回答を消してエラーを表示する
+- `done` が来ないまま切れたら、画面は失敗として扱う
 
 ## 5. 画面と URL
 | 画面 | URL | 目的 | 主な要素 |

@@ -29,6 +29,7 @@ main {
 .bubble.user { align-self: flex-end; background: #dbeafe; }
 .bubble.assistant { align-self: flex-start; background: #f3f4f6; }
 .bubble.error { align-self: flex-start; color: #b91c1c; }
+.bubble.loading { color: #6b7280; }
 
 #form { display: flex; gap: 8px; }
 #input { flex: 1; font: inherit; }

@@ -9,9 +9,13 @@ export const MAX_TOKENS = 1024;
 
 const SYSTEM_PROMPT = buildSystemPrompt(instructions, profile);
 
-export async function askClaude(apiKey: string, messages: Message[]): Promise<string> {
+// 安全上の理由で回答が止められたとき
+export class RefusalError extends Error {}
+
+// 回答の文字を届いた順に返す
+export async function* streamClaude(apiKey: string, messages: Message[]): AsyncGenerator<string> {
   const client = new Anthropic({ apiKey });
-  const response = await client.messages.create({
+  const stream = client.messages.stream({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     // 短い Q&A なので考える量を抑えて速く・安くする
@@ -20,11 +24,11 @@ export async function askClaude(apiKey: string, messages: Message[]): Promise<st
     messages,
   });
 
-  if (response.stop_reason === "refusal") {
-    return "すみません、その質問にはお答えできません。";
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      yield event.delta.text;
+    } else if (event.type === "message_delta" && event.delta.stop_reason === "refusal") {
+      throw new RefusalError();
+    }
   }
-  return response.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join("");
 }

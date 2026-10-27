@@ -23,10 +23,42 @@ function addBubble(role, text) {
   return div;
 }
 
+const ERROR_MESSAGES = {
+  refusal: "すみません、その質問にはお答えできません。",
+  default: "送信できませんでした。少し時間をおいてもう一度お試しください。",
+};
+
+class ChatError extends Error {}
+
+// Worker からの SSE を読み、届いた文字ごとに onText を呼ぶ。全文を返す
+async function readStream(res, onText) {
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  let full = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const events = buffer.split("\n\n");
+    buffer = events.pop();
+    for (const event of events) {
+      if (!event.startsWith("data: ")) continue;
+      const data = JSON.parse(event.slice("data: ".length));
+      if (data.error) throw new ChatError(data.error);
+      if (data.done) return full;
+      full += data.text;
+      onText(full);
+    }
+  }
+  // done が来ないまま切れた
+  throw new ChatError("stream_closed");
+}
+
 async function send(text) {
   history.push({ role: "user", content: text });
   addBubble("user", text);
   sendButton.disabled = true;
+  const bubble = addBubble("assistant loading", "…");
 
   try {
     const res = await fetch(window.CHAT_CONFIG.workerUrl, {
@@ -34,15 +66,23 @@ async function send(text) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: recentHistory() }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-    history.push({ role: "assistant", content: data.text });
-    addBubble("assistant", data.text);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new ChatError(data.error ?? `HTTP ${res.status}`);
+    }
+    const answer = await readStream(res, (soFar) => {
+      bubble.classList.remove("loading");
+      bubble.textContent = soFar;
+      bubble.scrollIntoView({ block: "end" });
+    });
+    history.push({ role: "assistant", content: answer });
   } catch (err) {
-    // 失敗した質問は履歴から外す（次の送信に壊れた履歴を含めない）
+    // 失敗した質問と途中までの回答は消す（次の送信に壊れた履歴を含めない）
     history.pop();
+    bubble.remove();
     console.error(err);
-    addBubble("error", "送信できませんでした。少し時間をおいてもう一度お試しください。");
+    const key = err instanceof ChatError ? err.message : "default";
+    addBubble("error", ERROR_MESSAGES[key] ?? ERROR_MESSAGES.default);
   } finally {
     sendButton.disabled = false;
   }
