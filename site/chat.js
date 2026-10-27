@@ -2,6 +2,7 @@ const log = document.getElementById("log");
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const sendButton = document.getElementById("send");
+const suggestions = document.getElementById("suggestions");
 
 // 会話はこの配列だけで持つ（リロードで消える）
 const history = [];
@@ -91,10 +92,38 @@ async function send(text) {
   }
 }
 
+function submit(text) {
+  if (!text || sendButton.disabled) return;
+  // 質問例は最初だけ出す
+  suggestions.hidden = true;
+  send(text);
+}
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = input.value.trim();
   if (!text || sendButton.disabled) return;
   input.value = "";
-  send(text);
+  resizeInput();
+  submit(text);
+});
+
+// Enter で送信、Shift+Enter で改行。日本語の変換確定の Enter では送らない
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+// 入力に合わせて高さを伸ばす（上限は CSS の max-height）
+function resizeInput() {
+  input.style.height = "auto";
+  input.style.height = `${input.scrollHeight + 2}px`;
+}
+input.addEventListener("input", resizeInput);
+
+suggestions.addEventListener("click", (e) => {
+  const button = e.target.closest("button");
+  if (button) submit(button.textContent);
 });

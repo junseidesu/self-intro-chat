@@ -2,25 +2,44 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>自己紹介</title>
-  <!-- TODO(S6): アイコンを用意する。それまで favicon の 404 を出さないための空指定 -->
-  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>山田 太郎 | 自己紹介</title>
+  <meta name="description" content="山田 太郎の自己紹介。AIに僕のことを質問できます。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6f5e'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E5%A4%AA%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>自己紹介</h1>
-    <p>AIに僕のことを聞いてみてください。</p>
+  <!-- 見出しの名前・ひとこと・リンクはここを直接書き換える（profile.md とは別） -->
+  <header class="profile">
+    <div class="avatar" aria-hidden="true">太</div>
+    <div class="profile-text">
+      <h1>山田 太郎</h1>
+      <p class="tagline">作ることが好きな学生。Webアプリと音楽が好きです。</p>
+      <nav class="links" aria-label="リンク">
+        <a href="https://github.com/example" rel="noopener" target="_blank">GitHub</a>
+        <a href="mailto:example@example.com">メール</a>
+      </nav>
+    </div>
+  </header>
 
-    <div id="log" aria-live="polite"></div>
+  <main class="chat">
+    <div id="log" class="log" aria-live="polite">
+      <div class="bubble assistant">こんにちは！僕について気になることを、なんでも聞いてください。</div>
+    </div>
 
-    <form id="form">
-      <label for="input" class="visually-hidden">質問</label>
-      <textarea id="input" rows="2" maxlength="500" placeholder="質問を入力…" required></textarea>
-      <button id="send" type="submit">送信</button>
-    </form>
+    <div id="suggestions" class="suggestions" aria-label="質問の例">
+      <button type="button">どんな人？</button>
+      <button type="button">経歴を教えて</button>
+      <button type="button">得意なことは？</button>
+      <button type="button">趣味は？</button>
+    </div>
   </main>
+
+  <form id="form" class="composer">
+    <label for="input" class="visually-hidden">質問</label>
+    <textarea id="input" rows="1" maxlength="500" placeholder="質問を入力（Enterで送信）" required></textarea>
+    <button id="send" type="submit">送信</button>
+  </form>
 
   <script src="config.js"></script>
   <script src="chat.js"></script>
