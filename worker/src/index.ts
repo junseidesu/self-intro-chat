@@ -1,11 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { RefusalError, streamClaude } from "./claude";
+import { consumeDailyQuota } from "./limits";
 import { validateChatRequest } from "./validate";
 
 export interface Env {
   ALLOWED_ORIGINS: string;
   // ローカルは .dev.vars、本番は `wrangler secret put` で設定する
   ANTHROPIC_API_KEY: string;
+  DAILY_LIMIT: string;
+  IP_RATE_LIMITER: RateLimit;
+  USAGE: KVNamespace;
 }
 
 function corsHeaders(origin: string): Record<string, string> {
@@ -45,6 +49,13 @@ export default {
       return json({ error: "method_not_allowed" }, 405, cors);
     }
 
+    // 中身を読む前に IP ごとの回数で弾く（不正な要求の連打も止める）
+    const ip = request.headers.get("CF-Connecting-IP") ?? "local";
+    const { success } = await env.IP_RATE_LIMITER.limit({ key: ip });
+    if (!success) {
+      return json({ error: "rate_limited" }, 429, cors);
+    }
+
     let body: unknown;
     try {
       body = await request.json();
@@ -54,6 +65,11 @@ export default {
     const result = validateChatRequest(body);
     if (!result.ok) {
       return json({ error: "invalid_request", reason: result.reason }, 400, cors);
+    }
+
+    // 正しい要求だけを1日の回数として数える
+    if (!(await consumeDailyQuota(env.USAGE, Number(env.DAILY_LIMIT), new Date()))) {
+      return json({ error: "daily_limit" }, 429, cors);
     }
 
     // 回答は SSE で少しずつ返す。途中で失敗したら error イベントを送って閉じる

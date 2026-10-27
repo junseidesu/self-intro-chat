@@ -96,7 +96,9 @@ docs/
 - サイト: 素の HTML / CSS / JavaScript（ビルドなし）
 - 中継: Cloudflare Workers + TypeScript（strict）、Wrangler でデプロイ
 - AI: Claude API、`@anthropic-ai/sdk`、モデルは `claude-haiku-5-5`、effort `low`
-- 制限: Workers Rate Limiting（IPごと 10回/分）、KV（全体 1日200回）
+- 制限: Workers Rate Limiting（IPごと 10回/分、`IP_RATE_LIMITER`）、KV（全体 1日200回、`USAGE`。日本時間の日付ごとに数える）
+  - 処理の順番: Origin 確認 → IP の回数制限 → 中身の検証 → 1日の上限（正しい要求だけ数える） → Claude 呼び出し
+  - どちらの制限も厳密ではない（Rate Limiting は Cloudflare の拠点ごと、KV は読んで書くまでに割り込まれうる）。多少超えても月額上限で止まる
 - テスト: Vitest（Worker の検証・制限・指示文の組み立て）
 - 公開先: サイト → GitHub Pages（Actions で `site/` を公開）、中継 → Cloudflare Workers（`*.workers.dev`）
 

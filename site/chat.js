@@ -25,6 +25,9 @@ function addBubble(role, text) {
 
 const ERROR_MESSAGES = {
   refusal: "すみません、その質問にはお答えできません。",
+  rate_limited: "続けて送りすぎです。1分ほど待ってからもう一度お試しください。",
+  daily_limit: "今日の利用回数の上限に達しました。また明日お試しください。",
+  invalid_request: "質問が長すぎるか、形が正しくありません。短くしてもう一度お試しください。",
   default: "送信できませんでした。少し時間をおいてもう一度お試しください。",
 };
 
