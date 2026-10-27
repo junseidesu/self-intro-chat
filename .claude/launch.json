@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "worker",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "worker", "run", "dev"],
+      "port": 8787
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--directory", "site"],
+      "port": 5500
+    }
+  ]
+}

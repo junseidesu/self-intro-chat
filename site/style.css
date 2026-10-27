@@ -1,0 +1,42 @@
+/* S0 の仮スタイル。S6 で作り込む */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #fff;
+  color: #222;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+#log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+.bubble.user { align-self: flex-end; background: #dbeafe; }
+.bubble.assistant { align-self: flex-start; background: #f3f4f6; }
+.bubble.error { align-self: flex-start; color: #b91c1c; }
+
+#form { display: flex; gap: 8px; }
+#input { flex: 1; font: inherit; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
